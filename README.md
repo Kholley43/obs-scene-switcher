@@ -16,6 +16,8 @@ Replaces the OBS **Auto Scene Switcher** plugin. Switches OBS **program scenes**
 
 Runtime CLI uses **zero npm packages**. `npm install` is only for the optional test suite.
 
+Works on **Windows** and **Linux** (macOS too). Use the `.ps1` scripts on Windows or the `.sh` scripts on Linux.
+
 ---
 
 ## Turn on OBS WebSocket (required)
@@ -77,21 +79,27 @@ OBS must stay open. Closing OBS stops WebSocket and the script cannot switch sce
 
 ## Install (first time)
 
+### Windows
+
 ```powershell
-# 1. Clone or unzip this folder anywhere, e.g. C:\obs-scene-switcher
 cd C:\obs-scene-switcher
-
-# 2. (Optional) Run automated tests — no OBS needed for most checks
-npm install
-npm test
-
-# 3. Turn on OBS WebSocket — see section "Turn on OBS WebSocket (required)" above
-#    Quick version: OBS → Tools → WebSocket Server Settings → Enable → port 4455
-
-# 4. Create your config
+npm install    # optional — tests only
 copy config.example.json config.json
 notepad config.json
 ```
+
+### Linux
+
+```bash
+git clone https://github.com/Kholley43/obs-scene-switcher.git
+cd obs-scene-switcher
+npm install    # optional — tests only
+cp config.example.json config.json
+nano config.json   # or vim, code, etc.
+chmod +x start-panel.sh start-rotate.sh test-2-scenes.sh
+```
+
+### Both platforms
 
 Edit `config.json`:
 
@@ -190,13 +198,13 @@ node C:\obs-scene-switcher\bin\obs-scene.mjs goto SOL
 
 ---
 
-## Windows shortcuts
+## Platform shortcuts
 
-| File | Action |
-|------|--------|
-| `Start-Panel.ps1` | **Web control panel** — adjust speed, scene buttons, start/stop rotate |
-| `Test-2-Scenes.ps1` | Guided 2-scene live test |
-| `Start-Rotate.ps1` | Start auto-rotate using `config.json` (CLI only) |
+| Windows | Linux | Action |
+|---------|-------|--------|
+| `Start-Panel.ps1` | `./start-panel.sh` | **Web control panel** — speed, scene buttons, rotate |
+| `Test-2-Scenes.ps1` | `./test-2-scenes.sh` | Guided 2-scene live test |
+| `Start-Rotate.ps1` | `./start-rotate.sh` | Auto-rotate CLI only |
 
 ---
 
@@ -208,6 +216,14 @@ A local browser UI for stream control — no install beyond Node.
 npm run panel
 # or
 .\Start-Panel.ps1
+```
+
+Linux:
+
+```bash
+npm run panel
+# or
+./start-panel.sh
 ```
 
 Opens **http://127.0.0.1:8765** (change `panelPort` in `config.json`).
@@ -251,9 +267,12 @@ obs-scene-switcher/
   lib/switcher.mjs           Config + rotate logic
   config.example.json        9-scene template
   config.2-scenes.example.json   2-scene test template
-  Start-Panel.ps1            Launch web panel
-  Test-2-Scenes.ps1          Live 2-scene test script
-  Start-Rotate.ps1           Auto-rotate shortcut
+  Start-Panel.ps1            Launch web panel (Windows)
+  start-panel.sh             Launch web panel (Linux)
+  Test-2-Scenes.ps1          Live 2-scene test (Windows)
+  test-2-scenes.sh           Live 2-scene test (Linux)
+  Start-Rotate.ps1           Auto-rotate shortcut (Windows)
+  start-rotate.sh            Auto-rotate shortcut (Linux)
   test/smoke.mjs             Automated tests
 ```
 

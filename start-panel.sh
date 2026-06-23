@@ -2,6 +2,9 @@
 # Start the web control panel (OBS must be running)
 set -euo pipefail
 cd "$(dirname "$0")"
+# shellcheck source=ensure-deps.sh
+source ./ensure-deps.sh
+ensure_deps
 
 if [[ ! -f config.json ]]; then
   echo "No config.json — copy config.example.json first."

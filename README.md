@@ -93,10 +93,11 @@ notepad config.json
 ```bash
 git clone https://github.com/Kholley43/obs-scene-switcher.git
 cd obs-scene-switcher
-npm install    # optional — tests only
+npm install    # required on many Linux distros (see troubleshooting)
 cp config.example.json config.json
 nano config.json   # or vim, code, etc.
-chmod +x start-panel.sh start-rotate.sh test-2-scenes.sh
+chmod +x start-panel.sh start-rotate.sh test-2-scenes.sh check-setup.sh
+./check-setup.sh   # optional — verifies Node, WebSocket, OBS connection
 ```
 
 ### Both platforms
@@ -253,6 +254,7 @@ Leave the panel terminal window open while streaming. CLI still works alongside 
 | `Scene not found` | Run `list` — fix `obsScene` spelling in config |
 | `Unknown scene alias` | Use alias from config (`ONE`, `TWO`, `XAU`, …) |
 | Rotate too fast/slow | `rotateIntervalSec` in config or `--interval N` |
+| `global WebSocket missing` / `WebSocket not available` (Linux) | Some distro Node builds omit `globalThis.WebSocket` even on 18.19+. Run **`npm install`** in the project folder (installs `ws` fallback). Or run **`./check-setup.sh`**. `start-panel.sh` auto-runs `npm install` when needed. |
 
 ---
 
@@ -263,7 +265,9 @@ obs-scene-switcher/
   bin/obs-scene.mjs          CLI
   bin/panel-server.mjs       Web control panel server
   panel/index.html           Browser UI
-  lib/obs-ws-client.mjs      OBS WebSocket v5 client (no npm deps)
+  lib/obs-ws-client.mjs      OBS WebSocket v5 client
+  lib/websocket.mjs          global WebSocket or npm `ws` fallback
+  check-setup.sh             Linux setup + OBS connection check
   lib/switcher.mjs           Config + rotate logic
   config.example.json        9-scene template
   config.2-scenes.example.json   2-scene test template

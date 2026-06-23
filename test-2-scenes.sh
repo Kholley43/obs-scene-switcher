@@ -2,6 +2,9 @@
 # Quick live test — switches between 2 OBS scenes (edit config first).
 set -euo pipefail
 cd "$(dirname "$0")"
+# shellcheck source=ensure-deps.sh
+source ./ensure-deps.sh
+ensure_deps
 
 if ! command -v node >/dev/null 2>&1; then
   echo "Node.js 18+ required: https://nodejs.org/" >&2

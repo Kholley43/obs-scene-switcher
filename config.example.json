@@ -1,0 +1,19 @@
+{
+  "host": "127.0.0.1",
+  "port": 4455,
+  "password": "",
+  "rotateIntervalSec": 45,
+  "includeManualInRotate": false,
+  "panelPort": 8765,
+  "scenes": [
+    { "id": "eurusd", "alias": "EURUSD", "obsScene": "EURUSD", "kind": "forex" },
+    { "id": "audusd", "alias": "AUDUSD", "obsScene": "AUDUSD", "kind": "forex" },
+    { "id": "xau", "alias": "XAU", "obsScene": "XAU", "kind": "metal" },
+    { "id": "xag", "alias": "XAG", "obsScene": "XAG", "kind": "metal" },
+    { "id": "btc", "alias": "BTC", "obsScene": "BTC", "kind": "crypto" },
+    { "id": "eth", "alias": "ETH", "obsScene": "ETH", "kind": "perp" },
+    { "id": "sol", "alias": "SOL", "obsScene": "SOL", "kind": "perp" },
+    { "id": "bnb", "alias": "BNB", "obsScene": "BNB", "kind": "perp" },
+    { "id": "manual", "alias": "MANUAL", "obsScene": "Manual TA", "kind": "manual" }
+  ]
+}

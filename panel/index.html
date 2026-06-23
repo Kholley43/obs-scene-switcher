@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OBS Scene Switcher</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #242836;
+      --border: #2e3344;
+      --text: #e8eaef;
+      --muted: #8b92a8;
+      --accent: #7c3aed;
+      --accent2: #a78bfa;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --err: #ef4444;
+      --radius: 12px;
+      --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background: radial-gradient(ellipse at top, #1a1530 0%, var(--bg) 55%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+      line-height: 1.45;
+    }
+    .wrap { max-width: 920px; margin: 0 auto; }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    h1 { font-size: 1.35rem; font-weight: 650; letter-spacing: -0.02em; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+    .badge.ok .dot { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+    .badge.err .dot { background: var(--err); }
+    .badge.rotate .dot { background: var(--warn); animation: pulse 1.2s infinite; }
+    @keyframes pulse { 50% { opacity: 0.4; } }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+    }
+    .card h2 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .current-scene {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--accent2);
+      word-break: break-word;
+    }
+    .sub { color: var(--muted); font-size: 0.88rem; margin-top: 6px; }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    label { font-size: 0.88rem; color: var(--muted); }
+    input[type="range"] { flex: 1; min-width: 120px; accent-color: var(--accent); }
+    input[type="number"] {
+      width: 72px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 0.9rem;
+    }
+    .toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
+    button {
+      font-family: inherit;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.08s, filter 0.15s;
+    }
+    button:active { transform: scale(0.97); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #5b21b6);
+      color: white;
+    }
+    .btn-primary:hover:not(:disabled) { filter: brightness(1.08); }
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover:not(:disabled) { background: #2d3348; }
+    .btn-danger { background: #7f1d1d; color: #fecaca; }
+    .btn-danger:hover:not(:disabled) { filter: brightness(1.1); }
+    .scene-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .scene-btn {
+      padding: 14px 8px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      font-weight: 700;
+      font-size: 0.85rem;
+      letter-spacing: 0.03em;
+    }
+    .scene-btn:hover:not(:disabled) { border-color: var(--accent2); color: var(--accent2); }
+    .scene-btn.active {
+      border-color: var(--accent);
+      background: rgba(124, 58, 237, 0.2);
+      color: var(--accent2);
+    }
+    .scene-btn.manual { border-style: dashed; }
+    .scene-btn.out-of-rotate { opacity: 0.55; }
+    .countdown {
+      font-size: 2rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: var(--warn);
+    }
+    .log {
+      max-height: 160px;
+      overflow-y: auto;
+      font-size: 0.8rem;
+      font-family: ui-monospace, Consolas, monospace;
+      color: var(--muted);
+    }
+    .log div { padding: 4px 0; border-bottom: 1px solid var(--border); }
+    .log .time { color: #5c6378; margin-right: 8px; }
+    .err-banner {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+      padding: 10px 14px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      font-size: 0.88rem;
+      display: none;
+    }
+    .err-banner.show { display: block; }
+    .full { grid-column: 1 / -1; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>OBS Scene Switcher</h1>
+      <div id="connBadge" class="badge"><span class="dot"></span><span id="connText">Connecting…</span></div>
+    </header>
+
+    <div id="errBanner" class="err-banner"></div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Current program scene</h2>
+        <div id="currentScene" class="current-scene">—</div>
+        <div id="lastSwitch" class="sub"></div>
+      </div>
+      <div class="card">
+        <h2>Auto rotate</h2>
+        <div id="countdown" class="countdown" hidden>—</div>
+        <div id="rotateIdle" class="sub">Stopped</div>
+        <div class="row" style="margin-top: 14px">
+          <button id="btnRotate" class="btn-primary" disabled>Start rotate</button>
+          <button id="btnStop" class="btn-danger" disabled hidden>Stop</button>
+        </div>
+      </div>
+
+      <div class="card full">
+        <h2>Switch speed &amp; options</h2>
+        <div class="row" style="margin-bottom: 14px">
+          <label for="interval">Interval (seconds)</label>
+          <input type="range" id="interval" min="5" max="300" step="5" value="45" />
+          <input type="number" id="intervalNum" min="5" max="300" step="5" value="45" />
+          <button id="btnSave" class="btn-secondary">Save to config</button>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="includeManual" />
+          Include Manual TA in auto-rotate
+        </label>
+      </div>
+
+      <div class="card full">
+        <h2>Jump to scene</h2>
+        <div class="row" style="margin-bottom: 12px">
+          <button id="btnPrev" class="btn-secondary" disabled>◀ Prev</button>
+          <button id="btnNext" class="btn-secondary" disabled>Next ▶</button>
+          <button id="btnValidate" class="btn-secondary" disabled>Validate config</button>
+          <button id="btnRefresh" class="btn-secondary">Refresh</button>
+        </div>
+        <div id="sceneGrid" class="scene-grid"></div>
+      </div>
+
+      <div class="card full">
+        <h2>Activity</h2>
+        <div id="log" class="log"><div class="sub">Waiting for events…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let state = {};
+    let pollTimer = null;
+
+    async function api(path, opts = {}) {
+      const res = await fetch(path, {
+        headers: { 'Content-Type': 'application/json' },
+        ...opts,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || res.statusText);
+      return data;
+    }
+
+    function fmtTime(iso) {
+      try {
+        return new Date(iso).toLocaleTimeString();
+      } catch {
+        return '';
+      }
+    }
+
+    function syncIntervalInputs(sec) {
+      $('interval').value = sec;
+      $('intervalNum').value = sec;
+    }
+
+    function getInterval() {
+      return Math.max(5, Math.min(300, Number($('intervalNum').value) || 45));
+    }
+
+    function render(state) {
+      $('currentScene').textContent = state.currentScene || '(unknown)';
+      $('includeManual').checked = !!state.includeManualInRotate;
+      if (state.rotateIntervalSec) syncIntervalInputs(state.rotateIntervalSec);
+
+      const badge = $('connBadge');
+      const connText = $('connText');
+      badge.classList.remove('ok', 'err', 'rotate');
+      if (state.rotating) {
+        badge.classList.add('rotate');
+        connText.textContent = 'Auto-rotating';
+      } else if (state.connected) {
+        badge.classList.add('ok');
+        connText.textContent = 'OBS connected';
+      } else {
+        badge.classList.add('err');
+        connText.textContent = 'OBS disconnected';
+      }
+
+      const err = $('errBanner');
+      if (state.lastError && !state.connected) {
+        err.textContent = state.lastError;
+        err.classList.add('show');
+      } else {
+        err.classList.remove('show');
+      }
+
+      if (state.lastSwitch) {
+        const s = state.lastSwitch;
+        $('lastSwitch').textContent = `Last: ${s.alias || ''} (${s.from || '—'} → ${s.to})`;
+      }
+
+      const cd = $('countdown');
+      const idle = $('rotateIdle');
+      if (state.rotating && state.nextSwitchAt) {
+        const left = Math.max(0, Math.ceil((state.nextSwitchAt - Date.now()) / 1000));
+        cd.hidden = false;
+        idle.hidden = true;
+        cd.textContent = `${left}s`;
+      } else {
+        cd.hidden = true;
+        idle.hidden = false;
+        idle.textContent = state.rotating ? 'Starting…' : 'Stopped';
+      }
+
+      $('btnRotate').disabled = !state.connected || state.rotating;
+      $('btnStop').hidden = !state.rotating;
+      $('btnStop').disabled = !state.rotating;
+      $('btnPrev').disabled = !state.connected;
+      $('btnNext').disabled = !state.connected;
+      $('btnValidate').disabled = !state.connected;
+
+      const grid = $('sceneGrid');
+      grid.innerHTML = '';
+      for (const s of state.scenes || []) {
+        const btn = document.createElement('button');
+        btn.className = 'scene-btn';
+        if (s.kind === 'manual') btn.classList.add('manual');
+        if (!s.inRotate) btn.classList.add('out-of-rotate');
+        if (s.obsScene === state.currentScene) btn.classList.add('active');
+        btn.textContent = s.alias;
+        btn.title = s.obsScene + (s.inRotate ? '' : ' (skipped in rotate)');
+        btn.disabled = !state.connected;
+        btn.onclick = () => gotoScene(s.alias);
+        grid.appendChild(btn);
+      }
+
+      const logEl = $('log');
+      const entries = state.log || [];
+      if (!entries.length) {
+        logEl.innerHTML = '<div class="sub">No events yet</div>';
+      } else {
+        logEl.innerHTML = entries
+          .map((e) => `<div><span class="time">${fmtTime(e.at)}</span>${e.msg}</div>`)
+          .join('');
+      }
+    }
+
+    async function refresh() {
+      try {
+        state = await api('/api/status');
+        render(state);
+      } catch (e) {
+        $('connBadge').classList.add('err');
+        $('connText').textContent = 'Panel error';
+        $('errBanner').textContent = e.message;
+        $('errBanner').classList.add('show');
+      }
+    }
+
+    async function gotoScene(alias) {
+      await api('/api/goto', { method: 'POST', body: JSON.stringify({ alias }) });
+      await refresh();
+    }
+
+    $('interval').oninput = () => {
+      $('intervalNum').value = $('interval').value;
+    };
+    $('intervalNum').oninput = () => {
+      $('interval').value = $('intervalNum').value;
+    };
+
+    $('btnSave').onclick = async () => {
+      const body = {
+        rotateIntervalSec: getInterval(),
+        includeManualInRotate: $('includeManual').checked,
+      };
+      await api('/api/settings', { method: 'PATCH', body: JSON.stringify(body) });
+      await refresh();
+    };
+
+    $('btnRotate').onclick = async () => {
+      await api('/api/rotate/start', {
+        method: 'POST',
+        body: JSON.stringify({
+          rotateIntervalSec: getInterval(),
+          includeManualInRotate: $('includeManual').checked,
+        }),
+      });
+      await refresh();
+    };
+
+    $('btnStop').onclick = async () => {
+      await api('/api/rotate/stop', { method: 'POST', body: '{}' });
+      await refresh();
+    };
+
+    $('btnPrev').onclick = async () => {
+      await api('/api/prev', { method: 'POST', body: '{}' });
+      await refresh();
+    };
+
+    $('btnNext').onclick = async () => {
+      await api('/api/next', { method: 'POST', body: '{}' });
+      await refresh();
+    };
+
+    $('btnValidate').onclick = async () => {
+      const r = await api('/api/validate', { method: 'POST', body: '{}' });
+      if (r.ok) alert('All configured scenes found in OBS.');
+      else alert('Missing scenes:\n' + r.missing.map((m) => `${m.alias} → ${m.obsScene}`).join('\n'));
+      await refresh();
+    };
+
+    $('btnRefresh').onclick = async () => {
+      await api('/api/refresh', { method: 'POST', body: '{}' });
+      await refresh();
+    };
+
+    refresh();
+    pollTimer = setInterval(refresh, 1000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "host": "127.0.0.1",
+  "port": 4455,
+  "password": "",
+  "_comment_password": "If OBS WebSocket authentication is ON, put the same password here. Leave empty if auth is OFF.",
+  "rotateIntervalSec": 10,
+  "includeManualInRotate": true,
+  "scenes": [
+    { "id": "one", "alias": "ONE", "obsScene": "Scene 1", "kind": "pair" },
+    { "id": "two", "alias": "TWO", "obsScene": "Scene 2", "kind": "pair" }
+  ]
+}

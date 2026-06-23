@@ -1,0 +1,19 @@
+{
+  "name": "obs-scene-switcher",
+  "version": "1.1.0",
+  "description": "OBS Auto Scene Switcher for multi-pair trading streams",
+  "type": "module",
+  "scripts": {
+    "test": "node test/smoke.mjs",
+    "list": "node bin/obs-scene.mjs list",
+    "validate": "node bin/obs-scene.mjs validate",
+    "rotate": "node bin/obs-scene.mjs rotate",
+    "panel": "node bin/panel-server.mjs"
+  },
+  "devDependencies": {
+    "ws": "^8.18.3"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  }
+}
